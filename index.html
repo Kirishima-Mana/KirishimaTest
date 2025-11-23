@@ -28,7 +28,9 @@
         // 1. 协议是 'wss://' (不是 'ws://')
         // 2. 'localhost' 必须与你证书中的 'Common Name' (CN) 匹配，
         //    或者你需要先在浏览器中手动信任它。
-        const ws = new WebSocket('wss://localhost:8765');
+        const SERVER_IP = '103.85.74.40'; // <--- 替换成你的服务器公网 IP 或域名
+        const PORT = '8765';
+        const ws = new WebSocket(`wss://${SERVER_IP}:${PORT}`);
 
         // 连接成功
         ws.onopen = (event) => {
