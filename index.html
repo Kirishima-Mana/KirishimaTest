@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WSS 安全聊天</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+        #chatBox { width: 90%; height: 300px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; background: #fff; }
+        #messageInput { width: 70%; padding: 10px; }
+        #sendButton { padding: 10px; }
+        .message { margin-bottom: 5px; }
+        .self { color: blue; text-align: right; }
+        .other { color: green; }
+    </style>
+</head>
+<body>
+    <h2>安全聊天室 (WSS)</h2>
+    <div id="chatBox"></div>
+    <input type="text" id="messageInput" placeholder="输入消息...">
+    <button id="sendButton">发送</button>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // 连接到你的安全WebSocket服务器
+        // 注意:
+        // 1. 协议是 'wss://' (不是 'ws://')
+        // 2. 'localhost' 必须与你证书中的 'Common Name' (CN) 匹配，
+        //    或者你需要先在浏览器中手动信任它。
+        const ws = new WebSocket('wss://localhost:8765');
+
+        // 连接成功
+        ws.onopen = (event) => {
+            addMessage('系统', '已连接到安全聊天服务器。');
+        };
+
+        // 收到消息 (来自服务器的广播)
+        ws.onmessage = (event) => {
+            // 在这里, 我们假设消息就是纯文本
+            // 在你的项目中, 这可能是一个JSON字符串
+            // 比如: '{"from": "userB", "message": "你好"}'
+            addMessage('其他人', event.data);
+        };
+
+        // 连接关闭
+        ws.onclose = (event) => {
+            addMessage('系统', '已断开连接。');
+        };
+
+        // 连接出错
+        ws.onerror = (event) => {
+            addMessage('系统', '连接错误: ' + event);
+            console.error('WebSocket Error:', event);
+        };
+
+        // 发送按钮点击事件
+        sendButton.onclick = sendMessage;
+        // 回车键发送
+        messageInput.onkeyup = (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        };
+
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message && ws.readyState === WebSocket.OPEN) {
+                ws.send(message); // 将消息发送到服务器
+                addMessage('我', message, true); // 在本地显示自己的消息
+                messageInput.value = '';
+            }
+        }
+
+        function addMessage(user, text, isSelf = false) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = isSelf ? 'message self' : 'message other';
+            msgDiv.textContent = `${user}: ${text}`;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // 滚动到底部
+        }
+    </script>
+</body>
+</html>
